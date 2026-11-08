@@ -9,18 +9,12 @@ from server import tools
 from server.agents.safety_log_agent import mark_resolved
 from typing import Dict, Any, List
 
-# ---------------------------------------------------------
-# Load System Prompt for TRIAGE
-# ---------------------------------------------------------
 with open("server/prompts/triage_prompt.md", "r") as f:
     TRIAGE_PROMPT = f.read()
 
 system_message = SystemMessage(content=TRIAGE_PROMPT)
 
 
-# ---------------------------------------------------------
-# LangChain Tool Wrappers
-# ---------------------------------------------------------
 def stop_machine_func(input_str: str):
     try:
         d = json.loads(input_str)
@@ -62,9 +56,6 @@ def update_order_func(input_str: str):
     return tools.update_order_schedule(oid, nd)
 
 
-# ---------------------------------------------------------
-# Register Tools With LangChain
-# ---------------------------------------------------------
 lc_tools = [
     tool.from_function(stop_machine_func, name="stop_machine", description="Stop a machine by ID"),
     tool.from_function(schedule_maintenance_func, name="schedule_maintenance",
@@ -76,9 +67,6 @@ lc_tools = [
 ]
 
 
-# ---------------------------------------------------------
-# Build TRIAGE AGENT (new LangChain API)
-# ---------------------------------------------------------
 def build_triage_executor():
     llm = get_triage_llm()
 
@@ -100,9 +88,6 @@ def build_triage_executor():
 TRIAGE_EXECUTOR = build_triage_executor()
 
 
-# ---------------------------------------------------------
-# Fallback logic (if GPT fails)
-# ---------------------------------------------------------
 async def fallback_classification(event: Dict[str, Any]):
     etype = event.get("type")
     out = {
@@ -165,9 +150,6 @@ async def fallback_classification(event: Dict[str, Any]):
     return out
 
 
-# ---------------------------------------------------------
-# Execute tools from triage output
-# ---------------------------------------------------------
 async def execute_tool_calls(tool_calls: List[Dict[str, Any]]):
     for t in tool_calls:
         name = t["name"]
@@ -177,9 +159,6 @@ async def execute_tool_calls(tool_calls: List[Dict[str, Any]]):
             fn(**args)
 
 
-# ---------------------------------------------------------
-# Main event handler
-# ---------------------------------------------------------
 async def handle_event(event: Dict[str, Any]):
     try:
         result = TRIAGE_EXECUTOR.invoke({"input": json.dumps(event)})
@@ -203,16 +182,12 @@ async def handle_event(event: Dict[str, Any]):
 
         await execute_tool_calls(fallback["tools_to_call"])
 
-    # Mark safety logs as resolved
     if "log_id" in event:
         await mark_resolved(event["log_id"])
 
     return True
 
 
-# ---------------------------------------------------------
-# Event queue + loop
-# ---------------------------------------------------------
 triage_queue = asyncio.Queue()
 
 async def publish(event: Dict[str, Any]):

@@ -38,7 +38,6 @@ class GlobalRouterGraph:
         log_event({"agent": "TriageGraph", "executed": executed})
         self._update_memory(triage)
 
-        # Dynamic safety resolution: resolve after processing SafetyAgent events or explicit safety_resolve events
         try:
             if isinstance(ev, dict):
                 etype = ev.get("type")
@@ -54,12 +53,10 @@ class GlobalRouterGraph:
                         except Exception:
                             pass
         except Exception:
-            # Never block processing on resolution errors
             pass
 
         result = {"event": ev, "triage": triage.dict(), "executed": executed}
         try:
-            # Fire-and-forget websocket notification
             import asyncio
             coro = notify_triage(result)
             loop = asyncio.get_running_loop()
@@ -79,5 +76,4 @@ class GlobalRouterGraph:
                 self.queue.task_done()
 
 
-# Singleton instance
 GLOBAL_GRAPH = GlobalRouterGraph()

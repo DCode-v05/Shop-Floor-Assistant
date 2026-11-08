@@ -1,4 +1,3 @@
-# server/tools/notify_tools.py
 from server.tools.production_tools import append_log
 
 def notify(role: str, message: str, level: str="info"):

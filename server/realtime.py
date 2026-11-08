@@ -30,12 +30,10 @@ MANAGER = ConnectionManager()
 
 
 async def notify_log(entry: Dict[str, Any]):
-    # Broadcast a single log entry
     await MANAGER.broadcast_json({"type": "log", "data": entry})
 
 
 async def notify_triage(result: Dict[str, Any]):
-    # Broadcast triage/execution result
     await MANAGER.broadcast_json({"type": "triage", "data": result})
 
 

@@ -1,4 +1,3 @@
-# server/graph/tool_nodes.py
 from typing import Any, Dict
 from server.tools.production_tools import stop_machine, schedule_maintenance, update_order_schedule, log_event
 from server.tools.notify_tools import notify
@@ -17,7 +16,6 @@ def _normalize_call(call: Any) -> Dict[str, Any]:
         return {"name": call.name, "args": call.args or {}}
     if isinstance(call, dict):
         return {"name": call.get("name"), "args": call.get("args", {})}
-    # Unknown shape; return empty to trigger unknown_tool
     return {"name": None, "args": {}}
 
 def execute_tool_call(call: dict | ToolCall):

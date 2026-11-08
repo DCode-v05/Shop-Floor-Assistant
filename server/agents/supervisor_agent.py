@@ -28,7 +28,6 @@ def summarize_last_period(minutes: int = 60) -> Dict[str, Any]:
     def parse_ts(e):
         try:
             ts = e.get("timestamp", "")
-            # Ensure naive timestamps are treated as UTC
             dt = datetime.fromisoformat(ts)
             return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
         except Exception:
@@ -81,7 +80,6 @@ def _collect_recent_order_delays(minutes: int = 60) -> List[str]:
         ts = parse_ts(e)
         if not ts or ts < cutoff:
             continue
-        # triage log entries carry the event payload
         evt = e.get("event") or {}
         tri = e.get("triage") or {}
         if isinstance(evt, dict) and evt.get("type") == "order_delay":
@@ -89,7 +87,6 @@ def _collect_recent_order_delays(minutes: int = 60) -> List[str]:
             oid = payload.get("order_id")
             if oid:
                 order_ids.append(oid)
-        # Also consider executed tool logs for update_order
     return list(dict.fromkeys(order_ids))
 
 
@@ -98,18 +95,15 @@ async def loop(interval_seconds: int = 60):
         try:
             summary = summarize_last_period(minutes=60)
             log_event({"agent": "SupervisorAgent", "summary": summary})
-            # Simple policy: if there are 3+ critical notifications, escalate
             criticals = [n for n in summary.get("notifies", []) if n.get("level") == "critical"]
             if len(criticals) >= 3:
                 notify("supervisor", f"Escalation: {len(criticals)} critical events in last hour", "critical")
 
-            # Replan schedules: if multiple order delays recently, push due times by +2 hours
             delayed_orders = _collect_recent_order_delays(minutes=60)
             for oid in delayed_orders:
                 update_order_schedule(oid, new_due_in_hours=2)
                 notify("planner", f"Order {oid} auto-rescheduled by SupervisorAgent", "info")
 
-            # Daily summary once per day
             st = _load_state()
             last_day = st.get("last_daily_summary")
             today = datetime.now(timezone.utc).date().isoformat()

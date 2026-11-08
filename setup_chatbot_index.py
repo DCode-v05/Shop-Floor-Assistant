@@ -5,7 +5,6 @@ Run this from project root: python setup_chatbot_index.py
 import sys
 import os
 
-# Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from server.chatbot.helper import load_json_objects_as_documents, download_hugging_face_embeddings
@@ -19,7 +18,6 @@ import time
 def setup_pinecone_index():
     """Setup and populate Pinecone index with manufacturing data"""
     
-    # Load environment variables
     load_dotenv()
     PINECONE_API_KEY = os.environ.get('PINECONE_API_KEY')
     
@@ -30,14 +28,12 @@ def setup_pinecone_index():
     
     os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 
-    # Data folder
     data_folder = 'server/chatbot/data/'
     
     if not os.path.exists(data_folder):
         print(f"❌ Data folder not found: {data_folder}")
         return False
 
-    # Load JSON data as documents
     print("📄 Loading JSON data...")
     documents = load_json_objects_as_documents(data_folder=data_folder)
     print(f"✅ Loaded {len(documents)} documents.")
@@ -46,27 +42,22 @@ def setup_pinecone_index():
         print("❌ No documents loaded. Please check your JSON files.")
         return False
 
-    # Load embeddings model
     print("🔄 Loading embeddings model...")
     embeddings = download_hugging_face_embeddings()
 
-    # Initialize Pinecone
     print("🔄 Connecting to Pinecone...")
     pc = Pinecone(api_key=PINECONE_API_KEY)
 
-    # Index configuration
     index_name = "manufacturingindex"
-    dimension = 384  # all-MiniLM-L6-v2 dimension
+    dimension = 384
 
-    # Check if index exists
     existing_indexes = [idx.name for idx in pc.list_indexes()]
     
     if index_name in existing_indexes:
         print(f"⚠️  Index '{index_name}' already exists. Deleting old index...")
         pc.delete_index(index_name)
-        time.sleep(5)  # Wait for deletion to complete
+        time.sleep(5)
 
-    # Create new index
     print(f"🔄 Creating index '{index_name}'...")
     pc.create_index(
         name=index_name,
@@ -78,14 +69,12 @@ def setup_pinecone_index():
         )
     )
     
-    # Wait for index to be ready
     print("⏳ Waiting for index to be ready...")
     while not pc.describe_index(index_name).status['ready']:
         time.sleep(1)
     
     print("✅ Index is ready!")
 
-    # Create vector store and add documents
     print(f"🔄 Embedding and uploading {len(documents)} documents to Pinecone...")
     
     vectorstore = PineconeVectorStore.from_documents(

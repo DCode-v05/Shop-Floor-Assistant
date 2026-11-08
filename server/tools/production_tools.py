@@ -1,4 +1,3 @@
-# server/tools/production_tools.py
 import json, os, datetime, threading
 from server.config import DATA_DIR, LOG_FILE
 
@@ -13,7 +12,6 @@ def _ensure_log():
 def append_log(entry):
     _ensure_log()
     with _LOG_LOCK:
-        # Read existing logs safely
         try:
             with open(LOG_FILE, "r") as f:
                 logs = json.load(f)
@@ -23,25 +21,20 @@ def append_log(entry):
             logs = []
         entry["timestamp"] = datetime.datetime.utcnow().isoformat()
         logs.insert(0, entry)
-        # Atomic write via temp file then replace
         tmp_path = LOG_FILE + ".tmp"
         with open(tmp_path, "w") as f:
             json.dump(logs, f, indent=2)
         os.replace(tmp_path, LOG_FILE)
-    # Best-effort realtime notification (optional, avoid hard dependency)
     try:
         from server.realtime import notify_log
         import asyncio
         coro = notify_log(entry)
-        # If already in event loop, schedule; else run soon
         try:
             loop = asyncio.get_running_loop()
             loop.create_task(coro)
         except RuntimeError:
-            # No running loop; ignore
             pass
     except Exception:
-        # Realtime is optional; never break logging
         pass
 
 def stop_machine(machine_id: str):

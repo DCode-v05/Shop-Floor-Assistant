@@ -1,4 +1,3 @@
-# server/main.py
 import asyncio, os, json
 from fastapi import FastAPI, HTTPException, Query, WebSocket
 from fastapi.websockets import WebSocketDisconnect
@@ -27,7 +26,6 @@ def read_json(path):
         with open(path) as f:
             return json.load(f)
     except Exception:
-        # Return empty on malformed JSON to avoid crashing endpoints
         return []
 
 @app.get("/machines")
@@ -77,7 +75,6 @@ async def websocket_endpoint(ws: WebSocket):
     await MANAGER.connect(ws)
     try:
         while True:
-            # Keep the connection open; ignore incoming messages for now
             await ws.receive_text()
     except WebSocketDisconnect:
         MANAGER.disconnect(ws)

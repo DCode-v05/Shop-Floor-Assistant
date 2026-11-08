@@ -1,4 +1,3 @@
-# server/graph/agents_loops.py
 import asyncio, json, os
 from server.graph.engine import GLOBAL_GRAPH
 from server.tools.production_tools import log_event
@@ -15,7 +14,6 @@ async def shopfloor_loop(interval=8):
                 machines = json.load(f)
             for m in machines:
                 if m.get("temperature",0) > 100:
-                    # Use a generic 'machine_upset' event consumed by triage
                     event = {"source":"ShopFloorAgent","type":"machine_upset","payload": m}
                     log_event({"agent":"ShopFloorAgent","event": event})
                     await GLOBAL_GRAPH.publish(event)
@@ -55,7 +53,6 @@ async def safety_log_loop(interval=6):
                 if lg.get("status") == "unresolved":
                     event = {"source":"SafetyAgent","type": lg.get("event_type"), "payload": lg}
                     log_event({"agent":"SafetyAgent","event":event})
-                    # Publish only; engine will resolve dynamically after triage
                     await GLOBAL_GRAPH.publish(event)
         except Exception as e:
             log_event({"actor":"SafetyAgent","error":str(e)})

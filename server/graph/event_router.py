@@ -1,4 +1,3 @@
-# server/graph/event_router.py
 from server.graph.tool_nodes import execute_tool_call, _normalize_call
 
 def route_and_execute(triage_output):

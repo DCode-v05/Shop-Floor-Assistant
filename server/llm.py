@@ -1,17 +1,14 @@
-# server/llm.py
 import json
 import os
 from typing import Dict, Any
 from server.config import USE_OPENAI_TRIAGE, TRIAGE_MODEL, OPENAI_API_KEY
 
-# Use MockLLM for deterministic demo; swap to OpenAI client when needed.
 class MockLLM:
     """
     Return deterministic triage responses based on event.
     """
     def triage(self, event: Dict[str,Any]) -> Dict[str,Any]:
         etype = event.get("type")
-        # Treat generic machine upset (temp/vibration) similar to overheat
         if etype in ("machine_overheat", "machine_upset"):
             temp = event.get("payload", {}).get("temperature", event.get("temperature", 0))
             vib = event.get("payload", {}).get("vibration", event.get("vibration", 0))
@@ -52,10 +49,8 @@ class MockLLM:
                 "rationale":"PPE missing / unsafe zone entry",
                 "tools_to_call":[{"name":"notify","args":{"role":"supervisor","message":"Safety violation detected","level":"critical"}}]
             }
-        # fallback
         return {"severity":"S4","category":"Unknown","rationale":"No issue","tools_to_call":[]}
 
-# create instance
 llm = MockLLM()
 
 def triage_with_openai(event: Dict[str, Any]) -> Dict[str, Any]:
@@ -75,12 +70,10 @@ def triage_with_openai(event: Dict[str, Any]) -> Dict[str, Any]:
         )
         content = resp.choices[0].message.content
         data = json.loads(content)
-        # basic shape guard
         if not isinstance(data.get("tools_to_call", []), list):
             data["tools_to_call"] = []
         return data
     except Exception:
-        # fallback to deterministic mock
         return llm.triage(event)
 
 def triage(event: Dict[str, Any]) -> Dict[str, Any]:
