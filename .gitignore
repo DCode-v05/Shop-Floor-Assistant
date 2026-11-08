@@ -1,4 +1,29 @@
+# Env
 .env
+.env.local
+!.env.example
 /env
-*/node_modules
-**/__pycache__/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Node
+node_modules/
+frontend/build/
+*.tsbuildinfo
+
+# Logs
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
