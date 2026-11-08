@@ -85,4 +85,4 @@ setup_chatbot_index.py   unfinished Pinecone index script (see below)
 
 - It is a proof of concept. Actions are simulated and nothing has been run against real equipment.
 - `setup_chatbot_index.py` imports `server.chatbot.helper`, which is not in the repo, so it does not run. `.env.example` also lists MySQL, Pinecone and Groq settings that the current code does not use.
-- `langchain` and `langchain-openai` are pinned in `requirements.txt` but the server code does not import them.
+- `server/agents/triage_agent.py` uses LangChain (pinned in `requirements.txt`) but nothing imports it; the live triage path is `server/llm.py`.
